@@ -22,7 +22,11 @@ router.get('/:id', async (req, res) => {
   // find one category by its `id` value
   // be sure to include its associated Products
   try {
-    const category = await Category.findByPk(req.params.id)
+    const category = await Category.findByPk(req.params.id, {
+      include: [{
+        model: Product,
+      }],
+    });
 
     if (!category) {
       res.status(404).json({ message: 'no catagory found with this ID!'});
@@ -53,11 +57,46 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  // update a category by its `id` value
+  const categoryId = req.params.id;
+  const { category_name } = req.body;
+
+  try {
+    const updatedCategory = await Category.update(
+      { category_name },
+      { where: { id: categoryId } }
+    );
+
+    // Check if any rows were affected by the update
+    if (updatedCategory[0] === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.status(200).json({ message: 'Category updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
+
 router.delete('/:id', async (req, res) => {
-  // delete a category by its `id` value
+  const categoryId = req.params.id;
+
+  try {
+    const deletedCategory = await Category.destroy({
+      where: { id: categoryId },
+    });
+
+    // Check if any rows were affected by the deletion
+    if (deletedCategory === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.status(200).json({ message: 'Category deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 module.exports = router;
